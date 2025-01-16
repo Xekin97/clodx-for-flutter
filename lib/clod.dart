@@ -1,4 +1,4 @@
-import './main.dart';
+import 'main.dart';
 
 const clodKeyPrefix = '#CLOD_';
 
@@ -111,6 +111,37 @@ class Clod<T> {
   static clone() {}
 }
 
+class ClodVisitor<T> {
+  Clod<ClodValueType<T>> clod;
+
+  T value() {
+    if (clod is NormalClod) {
+      return (clod as NormalClod).current;
+    } else if (clod is PickClod) {
+      return (clod as PickClod).pick();
+    } else {
+      throw UnsupportedError(
+          'Unsupport to get value of this clod. ${clod.key}');
+    }
+  }
+
+  ClodVisitor(this.clod);
+}
+
+class ClodController<T> {
+  Clod<ClodValueType<T>> clod;
+  set(T value) {
+    if (clod is NormalClod || clod is MakeClod) {
+      (clod as NormalClod).make(value);
+    } else {
+      throw UnsupportedError(
+          'Unsupport to set value of this clod. ${clod.key}');
+    }
+  }
+
+  ClodController(this.clod);
+}
+
 class NormalClod<T> extends Clod<ClodNormalValue<T>> {
   late T current;
 
@@ -140,18 +171,13 @@ class NormalClod<T> extends Clod<ClodNormalValue<T>> {
 class PickClod<T> extends Clod<ClodPickValue<T>> {
   T? current;
 
-  V getter<V>(NormalClod<V> clod) {
+  ClodVisitor<V> visitorGenerate<V>(Clod<ClodValueType<V>> clod) {
     depClod(clod);
-    return clod.current;
-  }
-
-  V picker<V>(PickClod<V> clod) {
-    depClod(clod);
-    return clod.pick();
+    return ClodVisitor(clod);
   }
 
   pick() {
-    final valueAfter = meta.value(PickMethods(getter, picker));
+    final valueAfter = meta.value(visitorGenerate);
     updateValue(valueAfter);
     return valueAfter;
   }
@@ -168,26 +194,17 @@ class PickClod<T> extends Clod<ClodPickValue<T>> {
 }
 
 class MakeClod<T> extends Clod<ClodMakeValue<T>> {
-  V getter<V>(NormalClod<V> clod) {
+  ClodVisitor<V> visitorGenerate<V>(Clod<ClodValueType<V>> clod) {
     depClod(clod);
-    return clod.current;
+    return ClodVisitor(clod);
   }
 
-  V picker<V>(PickClod<V> clod) {
-    depClod(clod);
-    return clod.pick();
-  }
-
-  setter<V>(NormalClod<V> clod, V value) {
-    clod.make(value);
-  }
-
-  maker<V>(MakeClod<V> clod, V value) {
-    clod.make(value);
+  ClodController<V> controllerGenerate<V>(Clod<ClodValueType<V>> clod) {
+    return ClodController(clod);
   }
 
   make(T value) {
-    meta.value(value, MakeMethods(getter, picker, setter, maker));
+    meta.value(value, visitorGenerate, controllerGenerate);
   }
 
   MakeClod(super.value);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import './main.dart';
+
+import 'main.dart';
 
 abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
   final Set<Clod> _clods = {};
