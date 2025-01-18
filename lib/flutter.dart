@@ -34,11 +34,11 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
   }
 
   void Function(T value) useSetClod<T>(NormalClod<T> clod) {
-    if (_clodSetterCache.containsKey(clod.key)) {
-      return _clodSetterCache[clod.key];
+    if (!_clodSetterCache.containsKey(clod.key)) {
+      _clodSetterCache[clod.key] = clod.make;
     }
-    _clodSetterCache[clod.key] = clod.make;
-    return clod.make;
+
+    return _clodSetterCache[clod.key];
   }
 
   T useClodValue<T>(NormalClod<T> clod) {
@@ -53,9 +53,7 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
   }
 
   useMakeClod<T>(MakeClod<T> clod) {
-    return (T value) {
-      clod.make(value);
-    };
+    return clod.make;
   }
 
   @override
