@@ -29,31 +29,37 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
     func();
   }
 
-  (T, void Function(T value)) useClod<T>(NormalClod<T> clod) {
+  (T, void Function(T value)) useClod<T>(Clod<ClodValueType<T>> clod) {
     return (useClodValue(clod), useSetClod(clod));
   }
 
-  void Function(T value) useSetClod<T>(NormalClod<T> clod) {
-    if (!_clodSetterCache.containsKey(clod.key)) {
-      _clodSetterCache[clod.key] = clod.make;
+  void Function(T value) useSetClod<T>(Clod<ClodValueType<T>> clod) {
+    if (clod is MakeClod) {
+      _clodSetterCache[clod.key] = (clod as MakeClod).make;
+    } else if (clod is NormalClod) {
+      _clodSetterCache[clod.key] = (clod as NormalClod).make;
+    } else {
+      throw Exception(
+          "Can not set clod value to which except NormalClod or MakeClod.");
     }
 
     return _clodSetterCache[clod.key];
   }
 
-  T useClodValue<T>(NormalClod<T> clod) {
-    _memoryClod(clod);
-    return clod.current;
-  }
+  T useClodValue<T>(Clod<ClodValueType<T>> clod) {
+    if (clod is MakeClod) {
+      throw Exception(
+          "Can not get clod value from which except NormalClod or PickClod.");
+    }
 
-  T usePickClod<T>(PickClod<T> clod) {
-    _once(clod.pick);
     _memoryClod(clod);
-    return clod.current as T;
-  }
 
-  useMakeClod<T>(MakeClod<T> clod) {
-    return clod.make;
+    if (clod is PickClod) {
+      _once((clod as PickClod).pick);
+      return (clod as PickClod).current;
+    } else {
+      return (clod as NormalClod).current;
+    }
   }
 
   @override

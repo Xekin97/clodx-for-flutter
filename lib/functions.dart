@@ -1,33 +1,41 @@
 import './main.dart';
 
-NormalClod<T> clod<T>(T value) {
-  return NormalClod<T>(ClodNormalValue(value));
+NormalClod<T> clod<T>(T value, {bool Function(T prev, T next)? equal}) {
+  return NormalClod<T>(ClodNormalValue(value, equal: equal));
 }
 
-PickClod<T> pickClod<T>(Picker<T> value) {
-  return PickClod<T>(ClodPickValue(value));
+PickClod<T> pickClod<T>(Picker<T> value,
+    {bool Function(T prev, T next)? equal}) {
+  return PickClod<T>(ClodPickValue(value, equal: equal));
 }
 
 MakeClod<T> makeClod<T>(Maker<T> value) {
   return MakeClod<T>(ClodMakeValue(value));
 }
 
-T getClod<T>(NormalClod<T> clod) {
-  return clod.current;
+updatePickClod(PickClod clod) {
+  clod.pick();
 }
 
-T setClod<T>(NormalClod<T> clod, T value) {
-  return clod.make(value);
+T getClod<T>(Clod<ClodValueType<T>> clod) {
+  if (clod is NormalClod) {
+    return (clod as NormalClod).current;
+  }
+  if (clod is PickClod) {
+    return (clod as PickClod).pick();
+  }
+
+  throw Exception(
+      "Can not get clod value from which except NormalClod or PickClod.");
 }
 
-T export<T>(NormalClod<T> clod) {
-  return clod.current;
-}
-
-T pick<T>(PickClod<T> clod) {
-  return clod.pick();
-}
-
-void make<T>(MakeClod<T> clod, T value) {
-  clod.make(value);
+T setClod<T>(Clod<ClodValueType<T>> clod, T value) {
+  if (clod is NormalClod) {
+    return (clod as NormalClod).make(value);
+  }
+  if (clod is MakeClod) {
+    return (clod as MakeClod).make(value);
+  }
+  throw Exception(
+      "Can not set clod value to which except NormalClod or MakeClod.");
 }

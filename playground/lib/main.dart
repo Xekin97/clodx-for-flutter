@@ -1,7 +1,9 @@
 import 'package:clodx/main.dart';
 import 'package:flutter/material.dart';
 
-final countClod = clod(0);
+final countClod = clod(0, equal: (prev, next) {
+  return next > 15;
+});
 
 final pickCountClod = pickClod((visit) {
   return visit(countClod).value();
@@ -9,6 +11,8 @@ final pickCountClod = pickClod((visit) {
 
 final pickCountClod2 = pickClod((visit) {
   return visit(countClod).value();
+}, equal: (prev, next) {
+  return next < 10;
 });
 
 final pickCountClod3 = pickClod((visit) {
@@ -53,13 +57,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends ClodState<MyHomePage> {
   void _incrementCounter() {
-    final setCount = useMakeClod(makeCountClod);
+    final setCount = useSetClod(makeCountClod);
     setCount(1);
   }
 
   @override
   Widget build(BuildContext context) {
-    final count = usePickClod(pickCountClod3);
+    final count = useClodValue(pickCountClod2);
+    final count2 = useClodValue(countClod);
 
     return Scaffold(
       appBar: AppBar(
@@ -74,7 +79,7 @@ class _MyHomePageState extends ClodState<MyHomePage> {
               'You have pushed the button this many times:',
             ),
             Text(
-              '$count',
+              '$count $count2',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],

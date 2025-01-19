@@ -191,7 +191,14 @@ class NormalClod<T> extends Clod<ClodNormalValue<T>> {
 }
 
 class PickClod<T> extends Clod<ClodPickValue<T>> {
-  T? current;
+  T? lastValue;
+
+  T get current {
+    if (lastValue == null) {
+      throw Exception('PickClod is not initialized.');
+    }
+    return (lastValue as T);
+  }
 
   ClodVisitor<V> visitorGenerate<V>(Clod<ClodValueType<V>> clod) {
     return ClodVisitor(clod, onGet: (_) => depClod(clod));
@@ -205,8 +212,8 @@ class PickClod<T> extends Clod<ClodPickValue<T>> {
 
   updateValue(T value) {
     final equal = meta.equal ?? commonEqual;
-    if (current == null || !equal(current as T, value)) {
-      current = value;
+    if (lastValue == null || !equal(current, value)) {
+      lastValue = value;
       update();
     }
   }
