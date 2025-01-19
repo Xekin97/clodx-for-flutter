@@ -7,6 +7,14 @@ final pickCountClod = pickClod((visit) {
   return visit(countClod).value();
 });
 
+final pickCountClod2 = pickClod((visit) {
+  return visit(countClod).value();
+});
+
+final pickCountClod3 = pickClod((visit) {
+  return visit(pickCountClod2).value();
+});
+
 final makeCountClod = makeClod<int>((value, visit, control) {
   final count = visit(countClod).value();
   final setCount = control(countClod).set;
@@ -51,7 +59,7 @@ class _MyHomePageState extends ClodState<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final count = usePickClod(pickCountClod);
+    final count = usePickClod(pickCountClod3);
 
     return Scaffold(
       appBar: AppBar(

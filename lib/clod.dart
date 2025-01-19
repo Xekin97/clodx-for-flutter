@@ -18,6 +18,51 @@ bool commonEqual(dynamic a, dynamic b) {
   return a == b;
 }
 
+class ClodUpdator {
+  ClodUpdator._();
+
+  factory ClodUpdator() => updator;
+
+  static final ClodUpdator updator = ClodUpdator._();
+
+  bool updating = false;
+
+  Set<Clod> cache = {};
+
+  // a -> b -> c
+  // a -> c
+
+  static update(Clod clod) {
+    if (updator.updating) {
+      for (var clod in clod.depClodSet) {
+        updator.cache.add(clod);
+        update(clod);
+      }
+      return;
+    }
+
+    updator.updating = true;
+
+    for (var clod in clod.depClodSet) {
+      updator.cache.add(clod);
+      update(clod);
+    }
+
+    for (var clod in updator.cache) {
+      clod.callDepUpdates();
+
+      if (clod is NormalClod) {
+        update(clod);
+      } else if (clod is PickClod) {
+        clod.pick();
+      }
+    }
+
+    updator.updating = false;
+    updator.cache.clear();
+  }
+}
+
 class Clod<T> {
   late String key;
   late T meta;
@@ -42,27 +87,12 @@ class Clod<T> {
   }
 
   update() {
-    for (var callback in depUpdateSet) {
-      callback();
-    }
-
-    for (var clod in depClodSet) {
-      if (clod is PickClod) {
-        clod.pick();
-      } else {
-        clod.update();
-      }
-    }
-
-    callbackUpdates();
+    ClodUpdator.update(this);
   }
 
   depClod(Clod clod) {
     if (clod == this) {
       return;
-    }
-    if (Clod.isClodCircularDeps(this, clod)) {
-      throw 'These clods create circular dependencies.';
     }
 
     clod.depClodSet.add(this);
@@ -70,6 +100,12 @@ class Clod<T> {
 
   unDepClod(Clod clod) {
     clod.depClodSet.remove(this);
+  }
+
+  callDepUpdates() {
+    for (var callback in depUpdateSet) {
+      callback();
+    }
   }
 
   depUpdate(void Function() callback) {
@@ -86,46 +122,32 @@ class Clod<T> {
     onUpdateCallbacks.clear();
   }
 
-  static isClodCircularDeps(Clod a, Clod b) {
-    Set<Clod> deps = Clod.getClodDependencies(b);
-    return deps.contains(a);
-  }
-
-  static getClodDependencies(Clod clod) {
-    Set<Clod> deps = {};
-
-    void check(Clod target) {
-      for (var depClod in target.depClodSet) {
-        if (deps.contains(clod)) {
-          return;
-        }
-        deps.add(clod);
-        check(depClod);
-      }
-    }
-
-    check(clod);
-    return deps;
-  }
-
   static clone() {}
 }
 
 class ClodVisitor<T> {
   Clod<ClodValueType<T>> clod;
 
+  Function(T value)? onGet;
+
   T value() {
+    final T value;
+
     if (clod is NormalClod) {
-      return (clod as NormalClod).current;
+      value = (clod as NormalClod).current;
     } else if (clod is PickClod) {
-      return (clod as PickClod).pick();
+      value = (clod as PickClod).pick();
     } else {
       throw UnsupportedError(
           'Unsupport to get value of this clod. ${clod.key}');
     }
+    if (onGet is Function) {
+      onGet!(value);
+    }
+    return value;
   }
 
-  ClodVisitor(this.clod);
+  ClodVisitor(this.clod, {this.onGet});
 }
 
 class ClodController<T> {
@@ -172,8 +194,7 @@ class PickClod<T> extends Clod<ClodPickValue<T>> {
   T? current;
 
   ClodVisitor<V> visitorGenerate<V>(Clod<ClodValueType<V>> clod) {
-    depClod(clod);
-    return ClodVisitor(clod);
+    return ClodVisitor(clod, onGet: (_) => depClod(clod));
   }
 
   pick() {
@@ -195,8 +216,7 @@ class PickClod<T> extends Clod<ClodPickValue<T>> {
 
 class MakeClod<T> extends Clod<ClodMakeValue<T>> {
   ClodVisitor<V> visitorGenerate<V>(Clod<ClodValueType<V>> clod) {
-    depClod(clod);
-    return ClodVisitor(clod);
+    return ClodVisitor(clod, onGet: (_) => depClod(clod));
   }
 
   ClodController<V> controllerGenerate<V>(Clod<ClodValueType<V>> clod) {
