@@ -56,10 +56,9 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
 
     if (clod is PickClod) {
       _once((clod as PickClod).pick);
-      return (clod as PickClod).current;
-    } else {
-      return (clod as NormalClod).current;
     }
+
+    return visitClod(clod).value();
   }
 
   @override

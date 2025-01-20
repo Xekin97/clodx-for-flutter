@@ -153,8 +153,10 @@ class ClodVisitor<T> {
 class ClodController<T> {
   Clod<ClodValueType<T>> clod;
   set(T value) {
-    if (clod is NormalClod || clod is MakeClod) {
+    if (clod is NormalClod) {
       (clod as NormalClod).make(value);
+    } else if (clod is MakeClod) {
+      (clod as MakeClod).make(value);
     } else {
       throw UnsupportedError(
           'Unsupport to set value of this clod. ${clod.key}');

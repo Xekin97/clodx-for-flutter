@@ -13,29 +13,10 @@ MakeClod<T> makeClod<T>(Maker<T> value) {
   return MakeClod<T>(ClodMakeValue(value));
 }
 
-updatePickClod(PickClod clod) {
-  clod.pick();
+ClodVisitor<T> visitClod<T>(Clod<ClodValueType<T>> clod) {
+  return ClodVisitor(clod);
 }
 
-T getClod<T>(Clod<ClodValueType<T>> clod) {
-  if (clod is NormalClod) {
-    return (clod as NormalClod).current;
-  }
-  if (clod is PickClod) {
-    return (clod as PickClod).pick();
-  }
-
-  throw Exception(
-      "Can not get clod value from which except NormalClod or PickClod.");
-}
-
-T setClod<T>(Clod<ClodValueType<T>> clod, T value) {
-  if (clod is NormalClod) {
-    return (clod as NormalClod).make(value);
-  }
-  if (clod is MakeClod) {
-    return (clod as MakeClod).make(value);
-  }
-  throw Exception(
-      "Can not set clod value to which except NormalClod or MakeClod.");
+ClodController<T> controlClod<T>(Clod<ClodValueType<T>> clod) {
+  return ClodController(clod);
 }
