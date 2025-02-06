@@ -14,7 +14,11 @@ MakeClod<T> makeClod<T>(Maker<T> value) {
 }
 
 ClodVisitor<T> visitClod<T>(Clod<ClodValueType<T>> clod) {
-  return ClodVisitor(clod);
+  return ClodVisitor(clod, beforeGet: () {
+    if (clod is PickClod) {
+      (clod as PickClod).pick();
+    }
+  });
 }
 
 ClodController<T> controlClod<T>(Clod<ClodValueType<T>> clod) {

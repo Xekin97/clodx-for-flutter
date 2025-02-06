@@ -41,6 +41,7 @@ class ClodUpdator {
       return;
     }
 
+    updator.cache.add(clod);
     updator.updating = true;
 
     for (var clod in clod.depClodSet) {
@@ -69,21 +70,10 @@ class Clod<T> {
 
   Set<void Function()> depUpdateSet = {};
   Set<Clod> depClodSet = {};
-  List<Function> onUpdateCallbacks = [];
 
   Clod(T state) {
     key = createClodKey();
     meta = state;
-  }
-
-  callbackUpdates() {
-    for (var callback in onUpdateCallbacks) {
-      callback();
-    }
-  }
-
-  onUpdate(void Function() callback) {
-    onUpdateCallbacks.add(callback);
   }
 
   update() {
@@ -119,7 +109,6 @@ class Clod<T> {
   dispose() {
     depClodSet.clear();
     depUpdateSet.clear();
-    onUpdateCallbacks.clear();
   }
 
   static clone() {}
@@ -129,14 +118,19 @@ class ClodVisitor<T> {
   Clod<ClodValueType<T>> clod;
 
   Function(T value)? onGet;
+  Function()? beforeGet;
 
   T value() {
     final T value;
 
+    if (beforeGet is Function) {
+      beforeGet!();
+    }
+
     if (clod is NormalClod) {
       value = (clod as NormalClod).current;
     } else if (clod is PickClod) {
-      value = (clod as PickClod).pick();
+      value = (clod as PickClod).current;
     } else {
       throw UnsupportedError(
           'Unsupport to get value of this clod. ${clod.key}');
@@ -147,7 +141,7 @@ class ClodVisitor<T> {
     return value;
   }
 
-  ClodVisitor(this.clod, {this.onGet});
+  ClodVisitor(this.clod, {this.onGet, this.beforeGet});
 }
 
 class ClodController<T> {

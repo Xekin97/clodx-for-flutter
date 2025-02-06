@@ -11,13 +11,12 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
     setState(() {});
   }
 
-  _memoryClod(Clod clod) {
+  _memorizesClod(Clod clod) {
     _clods.add(clod);
     clod.depUpdate(this._update);
   }
 
-  _unMemoryClod(Clod clod) {
-    _clods.remove(clod);
+  _unMemorizeClod(Clod clod) {
     clod.unDepUpdate(this._update);
   }
 
@@ -52,7 +51,7 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
           "Can not get clod value from which except NormalClod or PickClod.");
     }
 
-    _memoryClod(clod);
+    _memorizesClod(clod);
 
     if (clod is PickClod) {
       _once((clod as PickClod).pick);
@@ -67,8 +66,9 @@ abstract class ClodState<Widget extends StatefulWidget> extends State<Widget> {
     _clodSetterCache.clear();
 
     for (var clod in _clods) {
-      _unMemoryClod(clod);
+      _unMemorizeClod(clod);
     }
+    _clods.clear();
 
     super.dispose();
   }
